@@ -1,103 +1,251 @@
-import Image from "next/image";
+"use client"
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Fab, IconButton, TextField, Switch } from "@mui/material";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import AddIcon from '@mui/icons-material/Add';
+import { useEffect, useState } from "react";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [tasks, setTasks] = useState<string[]>(() => {
+    const savedTasks = localStorage.getItem("tasks");
+    return savedTasks ? JSON.parse(savedTasks) : [];
+  });
+  const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [taskTitle, setTaskTitle] = useState("");
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme ? JSON.parse(savedTheme) : false;
+  });
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem("theme", JSON.stringify(darkMode));
+  }, [darkMode]);
+
+  const theme = createTheme({
+    palette: {
+      mode: darkMode ? "dark" : "light",
+      background: {
+        default: darkMode ? "#121212" : "#ffffff",
+        paper: darkMode ? "#1e1e1e" : "#ffffff",
+      },
+      text: {
+        primary: darkMode ? "#ffffff" : "#000000",
+      },
+    },
+  });
+
+  const handleOpenAdd = () => setOpenAdd(true);
+  const handleCloseAdd = () => {
+    setTaskTitle("");
+    setOpenAdd(false);
+  };
+
+  const handleAdd = () => {
+    if (taskTitle.trim()) {
+      setTasks([...tasks, taskTitle.trim()]);
+      setSuccessOpen(true);
+      handleCloseAdd();
+    }
+  };
+
+  const handleDelete = (index: number) => {
+    const updated = [...tasks];
+    updated.splice(index, 1);
+    setTasks(updated);
+  };
+
+  const handleOpenEdit = (index: number) => {
+    setEditIndex(index);
+    setTaskTitle(tasks[index]);
+    setOpenEdit(true);
+  };
+
+  const handleCloseEdit = () => {
+    setOpenEdit(false);
+    setEditIndex(null);
+    setTaskTitle("");
+  };
+
+  const handleUpdate = () => {
+    if (editIndex !== null && taskTitle.trim()) {
+      const updated = [...tasks];
+      updated[editIndex] = taskTitle.trim();
+      setTasks(updated);
+      setUpdateOpen(true); // Show update success message
+      handleCloseEdit();
+    }
+  };
+
+  const handleThemeToggle = () => {
+    setDarkMode((prev) => !prev);
+  };
+
+  const handleCloseSuccess = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSuccessOpen(false);
+  };
+
+  const handleCloseUpdate = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setUpdateOpen(false);
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <div className={`${darkMode ? "bg-black" : "bg-white"} min-h-screen flex flex-col items-center pt-10`}>
+        <div className={`text-4xl ${darkMode ? "text-white" : "text-gray-900"} mb-6`}>
+          Task Management Dashboard
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <TextField
+          label="Search-task..."
+          className="mb-4 w-210"
+          InputProps={{
+            style: { color: darkMode ? "#ffffff" : "#000000" },
+          }}
+          InputLabelProps={{
+            style: { color: darkMode ? "#ffffff" : "#757575" },
+          }}
+        />
+        <Switch className="mt-7" checked={darkMode} onChange={handleThemeToggle} />
+
+        <div className="w-210 space-y-6">
+          {tasks.map((task, index) => (
+            <div
+              key={index}
+              className={`${darkMode ? "bg-gray-800" : "bg-white"} shadow-xl rounded-lg p-6`}
+            >
+              <div className={`text-lg font-medium ${darkMode ? "text-white" : "text-gray-900"} mb-6`}>{task}</div>
+
+              <div className="flex gap-2">
+                <IconButton onClick={() => handleDelete(index)} color="error">
+                  <DeleteIcon />
+                </IconButton>
+                <IconButton onClick={() => handleOpenEdit(index)}>
+                  <EditIcon />
+                </IconButton>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Fab
+          color="primary"
+          aria-label="add"
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            boxShadow: 3,
+          }}
+          onClick={handleOpenAdd}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <AddIcon />
+        </Fab>
+        <Dialog
+          open={openAdd}
+          onClose={handleCloseAdd}
+          fullWidth
+          PaperProps={{
+            style: { backgroundColor: darkMode ? "#1e1e1e" : "#ffffff" },
+          }}
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <DialogTitle sx={{ color: darkMode ? "#ffffff" : "#000000" }}>Add Task</DialogTitle>
+          <DialogContent>
+            <TextField
+              margin="dense"
+              label="Task Title"
+              fullWidth
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)}
+              InputProps={{
+                style: { color: darkMode ? "#ffffff" : "#000000" },
+              }}
+              InputLabelProps={{
+                style: { color: darkMode ? "#ffffff" : "#757575" },
+              }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseAdd} color="error">
+              Cancel
+            </Button>
+            <Button onClick={handleAdd} variant="contained">
+              Add
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={openEdit}
+          onClose={handleCloseEdit}
+          fullWidth
+          maxWidth="sm"
+          PaperProps={{
+            style: { backgroundColor: darkMode ? "#1e1e1e" : "#ffffff" },
+          }}
         >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <DialogTitle sx={{ color: darkMode ? "#ffffff" : "#000000" }}>Edit Task</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Task Title"
+              fullWidth
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)}
+              InputProps={{
+                style: { color: darkMode ? "#ffffff" : "#000000" },
+              }}
+              InputLabelProps={{
+                style: { color: darkMode ? "#ffffff" : "#757575" },
+              }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseEdit} color="error">
+              Cancel
+            </Button>
+            <Button onClick={handleUpdate} variant="contained">
+              Update
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Snackbar
+          open={successOpen}
+          autoHideDuration={3000}
+          onClose={handleCloseSuccess}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <Alert onClose={handleCloseSuccess} severity="success" sx={{ width: '100%' }}>
+            Task added successfully!
+          </Alert>
+        </Snackbar>
+        <Snackbar
+          open={updateOpen}
+          autoHideDuration={3000}
+          onClose={handleCloseUpdate}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <Alert onClose={handleCloseUpdate} severity="success" sx={{ width: '100%' }}>
+            Task updated successfully!
+          </Alert>
+        </Snackbar>
+      </div>
+    </ThemeProvider>
   );
 }
