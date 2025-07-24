@@ -10,26 +10,27 @@ import Alert from '@mui/material/Alert';
 
 export default function Home() {
   const [tasks, setTasks] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>(""); // New state for search query
 
-useEffect(() => {
-  const savedTasks = typeof window !== "undefined" ? localStorage.getItem("tasks") : null;
-  if (savedTasks) {
-    setTasks(JSON.parse(savedTasks));
-  }
-}, []);
+  useEffect(() => {
+    const savedTasks = typeof window !== "undefined" ? localStorage.getItem("tasks") : null;
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
+  }, []);
 
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
   const [editIndex, setEditIndex] = useState<number | null>(null);
-const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
 
-useEffect(() => {
-  const savedTheme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
-  if (savedTheme) {
-    setDarkMode(JSON.parse(savedTheme));
-  }
-}, []);
+  useEffect(() => {
+    const savedTheme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
+    if (savedTheme) {
+      setDarkMode(JSON.parse(savedTheme));
+    }
+  }, []);
 
   const [successOpen, setSuccessOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
@@ -92,7 +93,7 @@ useEffect(() => {
       const updated = [...tasks];
       updated[editIndex] = taskTitle.trim();
       setTasks(updated);
-      setUpdateOpen(true); // Show update success message
+      setUpdateOpen(true);
       handleCloseEdit();
     }
   };
@@ -115,6 +116,11 @@ useEffect(() => {
     setUpdateOpen(false);
   };
 
+  // Filter tasks based on search query
+  const filteredTasks = tasks.filter((task) =>
+    task.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <ThemeProvider theme={theme}>
       <div className={`${darkMode ? "bg-black" : "bg-white"} min-h-screen flex flex-col items-center pt-10`}>
@@ -123,8 +129,10 @@ useEffect(() => {
         </div>
 
         <TextField
-          label="Search-task..."
+          label="Search task..."
           className="mb-4 w-210"
+          value={searchQuery} // Bind search query state
+          onChange={(e) => setSearchQuery(e.target.value)} // Update search query
           InputProps={{
             style: { color: darkMode ? "#ffffff" : "#000000" },
           }}
@@ -135,23 +143,29 @@ useEffect(() => {
         <Switch className="mt-7" checked={darkMode} onChange={handleThemeToggle} />
 
         <div className="w-210 space-y-6">
-          {tasks.map((task, index) => (
-            <div
-              key={index}
-              className={`${darkMode ? "bg-gray-800" : "bg-white"} shadow-xl rounded-lg p-6`}
-            >
-              <div className={`text-lg font-medium ${darkMode ? "text-white" : "text-gray-900"} mb-6`}>{task}</div>
+          {filteredTasks.length > 0 ? (
+            filteredTasks.map((task, index) => (
+              <div
+                key={index}
+                className={`${darkMode ? "bg-gray-800" : "bg-white"} shadow-xl rounded-lg p-6`}
+              >
+                <div className={`text-lg font-medium ${darkMode ? "text-white" : "text-gray-900"} mb-6`}>{task}</div>
 
-              <div className="flex gap-2">
-                <IconButton onClick={() => handleDelete(index)} color="error">
-                  <DeleteIcon />
-                </IconButton>
-                <IconButton onClick={() => handleOpenEdit(index)}>
-                  <EditIcon />
-                </IconButton>
+                <div className="flex gap-2">
+                  <IconButton onClick={() => handleDelete(tasks.indexOf(task))} color="error">
+                    <DeleteIcon />
+                  </IconButton>
+                  <IconButton onClick={() => handleOpenEdit(tasks.indexOf(task))}>
+                    <EditIcon />
+                  </IconButton>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className={`text-lg ${darkMode ? "text-white" : "text-gray-900"} text-center`}>
+              No tasks found
             </div>
-          ))}
+          )}
         </div>
 
         <Fab
