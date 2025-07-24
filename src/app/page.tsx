@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Fab, IconButton, TextField, Switch } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import AddIcon from '@mui/icons-material/Add';
@@ -10,7 +10,14 @@ import Alert from '@mui/material/Alert';
 
 export default function Home() {
   const [tasks, setTasks] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>(""); // New state for search query
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [taskTitle, setTaskTitle] = useState("");
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
 
   useEffect(() => {
     const savedTasks = typeof window !== "undefined" ? localStorage.getItem("tasks") : null;
@@ -19,21 +26,12 @@ export default function Home() {
     }
   }, []);
 
-  const [openAdd, setOpenAdd] = useState(false);
-  const [openEdit, setOpenEdit] = useState(false);
-  const [taskTitle, setTaskTitle] = useState("");
-  const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [darkMode, setDarkMode] = useState<boolean>(false);
-
   useEffect(() => {
     const savedTheme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
     if (savedTheme) {
       setDarkMode(JSON.parse(savedTheme));
     }
   }, []);
-
-  const [successOpen, setSuccessOpen] = useState(false);
-  const [updateOpen, setUpdateOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
@@ -116,23 +114,22 @@ export default function Home() {
     setUpdateOpen(false);
   };
 
-  // Filter tasks based on search query
   const filteredTasks = tasks.filter((task) =>
     task.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <ThemeProvider theme={theme}>
-      <div className={`${darkMode ? "bg-black" : "bg-white"} min-h-screen flex flex-col items-center pt-10`}>
-        <div className={`text-4xl ${darkMode ? "text-white" : "text-gray-900"} mb-6`}>
+      <div className={`min-h-screen flex flex-col items-center pt-6 sm:pt-8 md:pt-10 px-4 sm:px-6 md:px-8 ${darkMode ? "bg-gray-900" : "bg-white"}`}>
+        <div className={`text-xl sm:text-3xl md:text-4xl  ${darkMode ? "text-white" : "text-gray-900"} mb-4 sm:mb-6 text-center`}>
           Task Management Dashboard
         </div>
 
         <TextField
           label="Search task..."
-          className="mb-4 w-210"
-          value={searchQuery} // Bind search query state
-          onChange={(e) => setSearchQuery(e.target.value)} // Update search query
+          className="w-full max-w-xs sm:max-w-md md:max-w-4xl mb-4"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{
             style: { color: darkMode ? "#ffffff" : "#000000" },
           }}
@@ -140,41 +137,42 @@ export default function Home() {
             style: { color: darkMode ? "#ffffff" : "#757575" },
           }}
         />
-        <Switch className="mt-7" checked={darkMode} onChange={handleThemeToggle} />
+        <Switch className="mb-4 sm:mb-7 md:mb-7 md:mt-5" checked={darkMode} onChange={handleThemeToggle} />
 
-        <div className="w-210 space-y-6">
-          {filteredTasks.length > 0 ? (
-            filteredTasks.map((task, index) => (
-              <div
-                key={index}
-                className={`${darkMode ? "bg-gray-800" : "bg-white"} shadow-xl rounded-lg p-6`}
-              >
-                <div className={`text-lg font-medium ${darkMode ? "text-white" : "text-gray-900"} mb-6`}>{task}</div>
-
-                <div className="flex gap-2">
-                  <IconButton onClick={() => handleDelete(tasks.indexOf(task))} color="error">
-                    <DeleteIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleOpenEdit(tasks.indexOf(task))}>
-                    <EditIcon />
-                  </IconButton>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className={`text-lg ${darkMode ? "text-white" : "text-gray-900"} text-center`}>
-              No tasks found
-            </div>
-          )}
+       <div className="w-full max-w-xs sm:max-w-md md:max-w-4xl space-y-4 sm:space-y-6">
+  {filteredTasks.length > 0 ? (
+    filteredTasks.map((task, index) => (
+      <div
+        key={index}
+        className={`${
+          darkMode ? "bg-gray-800" : "bg-white"
+        } shadow-xl rounded-lg p-4 sm:p-6 md:p-8 flex flex-col`}
+      >
+        <div className={`text-base sm:text-lg font-medium ${darkMode ? "text-white" : "text-gray-900"} mb-4`}>{task}</div>
+        <div className="flex gap-2 justify-start">
+          <IconButton onClick={() => handleDelete(tasks.indexOf(task))} color="error">
+            <DeleteIcon />
+          </IconButton>
+          <IconButton onClick={() => handleOpenEdit(tasks.indexOf(task))}>
+            <EditIcon />
+          </IconButton>
         </div>
+      </div>
+    ))
+  ) : (
+    <div className={`text-base sm:text-lg ${darkMode ? "text-white" : "text-gray-900"} text-center`}>
+      No tasks found
+    </div>
+  )}
+</div>
 
         <Fab
           color="primary"
           aria-label="add"
           sx={{
             position: 'fixed',
-            bottom: 24,
-            right: 24,
+            bottom: 16,
+            right: 16,
             boxShadow: 3,
           }}
           onClick={handleOpenAdd}
@@ -185,6 +183,7 @@ export default function Home() {
           open={openAdd}
           onClose={handleCloseAdd}
           fullWidth
+          maxWidth="xs"
           PaperProps={{
             style: { backgroundColor: darkMode ? "#1e1e1e" : "#ffffff" },
           }}
@@ -218,7 +217,7 @@ export default function Home() {
           open={openEdit}
           onClose={handleCloseEdit}
           fullWidth
-          maxWidth="sm"
+          maxWidth="xs"
           PaperProps={{
             style: { backgroundColor: darkMode ? "#1e1e1e" : "#ffffff" },
           }}
