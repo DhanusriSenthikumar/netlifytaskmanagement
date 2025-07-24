@@ -9,18 +9,28 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
 export default function Home() {
-  const [tasks, setTasks] = useState<string[]>(() => {
-    const savedTasks = localStorage.getItem("tasks");
-    return savedTasks ? JSON.parse(savedTasks) : [];
-  });
+  const [tasks, setTasks] = useState<string[]>([]);
+
+useEffect(() => {
+  const savedTasks = typeof window !== "undefined" ? localStorage.getItem("tasks") : null;
+  if (savedTasks) {
+    setTasks(JSON.parse(savedTasks));
+  }
+}, []);
+
   const [openAdd, setOpenAdd] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    const savedTheme = localStorage.getItem("theme");
-    return savedTheme ? JSON.parse(savedTheme) : false;
-  });
+const [darkMode, setDarkMode] = useState<boolean>(false);
+
+useEffect(() => {
+  const savedTheme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
+  if (savedTheme) {
+    setDarkMode(JSON.parse(savedTheme));
+  }
+}, []);
+
   const [successOpen, setSuccessOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
 
